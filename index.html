@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="user-scalable=no, initial-scale=1, width=device-width">
+	<title>PouchDB</title>
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+
+	<style>
+		.image-splash{
+			width: 100%;
+		}
+		#tableMovies{
+			width:100%;
+			border:1px solid gray;
+			background-color:#7AC5CD;
+			color:#025f69;
+		}
+		#tableMovies th{
+			background-color:white;
+		}
+		#tableMovies tr:nth-of-type(odd){
+			background-color:#BFEFFF;
+			color:#025f69;
+		}
+		#tableMovies .thEmpty, #tableMovies .btnPencil{
+			width:10%;
+		}
+	</style>
+</head>
+<body>
+<section data-role="page" id="splash">
+	<article role="main" class="ui-content">
+		<img src="https://vmcink.files.wordpress.com/2016/11/aod.jpg" alt="army of movie poster" class="image-splash">
+	</article>
+</section>
+
+<section data-role="page" id="home">
+	<header data-role="header" data-position="fixed">
+		<h1>Movie Database</h1>
+	</header>
+	<article role="main" class="ui-content">
+		<h2>change me</h2>
+		<div data-role="collapsible" data-collapsed-icon="carat-u" data-expanded-icon="carat-d" data-collapsed="false">
+			<h2>Save Movie</h2>
+			<form action="" class="ui-body ui-body-a ui-corner-all" id="formMovie">
+			<label for="fieldCode">Code:</label><input type="text" name="fieldCode" placeholder="ADD" id="fieldCode">
+			<br />
+			<label for="fieldName">Name:</label><input type="text" name="fieldName" placeholder="Army Of Darkness" id="fieldName"><br />
+			<label for="fieldYear">Year:</label><input type="number" name="fieldYear" placeholder="1992" id="fieldYear">
+			<div class="ui-grid-b">
+				<div class="ui-block-a">
+				<input type="reset" value="Reset" id="btnReset">
+				</div>
+				<div class="ui-block-b">
+					<input type="button" value="Save" id="btnSave">
+				</div>
+				<div class="ui-block-c">
+					<input type="button" value="Show" id="btnShow">
+				</div>
+			</div>
+			</form>
+		</div>
+		<div id="divShow"></div>
+		<div data-role="popup" class="ui-content" id="popSaved">Movie Saved</div>
+		<div data-role="popup" class="ui-content" id="popDeleted">Movie Deleted</div>
+		<div data-role="popup" class="ui-content" id="popErrorCode">ERROR: ALL FIELDS FILLED</div>
+		<div data-role="popup" class="ui-content" id="popErrorDup">ERROR: MOVIE ALREADY ENTERED</div>
+		<div data-role="popup" class="ui-content" id="popErrorNull">ERROR: MOVIE NONEXISTENT</div>
+		
+
+		<div data-role="popup" data-dialog="true" id="popMovieUpdate">
+		<a href="#home" data-rel="back" class="ui-btn ui-corder-all ui-shadow ui-icon-delete ui-btn-icon-notext ui-btn-right">Close</a>
+			<header data-role="header"><h1 id="h1Update">Update</h1></header>
+			<article role="main" class="ui-content">
+				<div id="divEdit"></div>
+			</article>
+
+		</div>
+
+	</article>
+	<footer data-role="footer" data-position="fixed">
+		<h4>&nbsp;</h4>
+		<a href="#optionsPop" data-icon="gear" data-iconpos="notext" data-transition="pop" class="ui-btn-right">options</a>
+	</footer>
+</section>
+
+<section data-role="page" data-dialog="true" id="optionsPop">
+	<header data-role="header">
+		<h1>Options</h1>
+	</header>
+	<article role="main" class="ui-content">
+		<p>informative data</p>
+		<a href="#" class="ui-btn ui-corner-all ui-btn-b ui-shadow" id="btnNuke">Delete All</a>
+	</article>
+</section>
+
+
+	<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+	<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+	<script src="http://cdn.jsdelivr.net/pouchdb/6.0.7/pouchdb.min.js">
+	</script>
+	<script>
+		$(function(){
+			"use strict";
+
+			var db;
+
+			function initDB(){
+				db = new PouchDB("moviesDB");
+				console.log(db);
+				return db;
+			}
+			initDB();
+
+			var splashScreen = setTimeout(showHome, 2000);
+			function showHome() {
+				clearTimeout(splashScreen);
+				$.mobile.navigate("#home");
+			}
+
+			var $elFormMovie = $('#formMovie'),
+				$elBtnReset = $('#btnReset'),
+				$elBtnShow = $('#btnShow'),
+				$elBtnSave = $('#btnSave'),
+				$elDivShow = $('#divShow');
+
+			function fnClearForm(){
+				$elFormMovie[0].reset();
+				console.log("form cleared");
+			}
+			function fnSaveMovie(){
+				var $valCode = $('#fieldCode').val(),
+					$valName = $('#fieldName').val(),
+					$valYear = $('#fieldYear').val();
+
+				$valCode = $valCode.toUpperCase();
+
+				var aMovie = {
+					"_id" : $valCode,
+					"mName" : $valName,
+					"mYear" : $valYear
+				}
+
+				console.log(aMovie);
+
+				db.put(aMovie, function(error, success){
+					if(success){
+						fnClearForm();
+						console.log(success);
+						$("#popSaved").popup();
+						$("#popSaved").popup("open");
+					} else {
+						switch(error.status){
+							case 409: $("#popErrorDup").popup();$("#popErrorDup").popup("open");
+								break;
+							case 412: $("#popErrorCode").popup();$("#popErrorCode").popup("open");
+								break;
+							case 502: $("#popErrorNull").popup();$("#popErrorNull").popup("open");
+								break;
+							default: console.log(error);alert('contact someone who knows');
+								break;
+						}
+					}
+				})
+			}
+			function fnShowMovies(){
+				db.allDocs({"include_docs" : true,"ascending" : true}, function(error, success){
+					if(success){
+						//console.log(success.rows);
+						funShowMoviesTable(success.rows);
+					} else {
+						console.log(error)
+					}
+				});
+			}
+
+				function funShowMoviesTable(data){
+					var str="<p><table id='tableMovies'>" + 
+						"<tr><th>Code</th><th>Name</th><th>Year</th><th class='thEmpty'>&nbsp;</th></tr>";
+						for(var i = 0; i< data.length; i++){
+							str += "<tr><td>" + data[i].doc._id + 
+								   "</td><td>" + data[i].doc.mName + 
+								   "</td><td>" + data[i].doc.mYear + 
+								   "</td><td class='btnPencil'>&#x270e;</td></tr>"
+						}
+						str += "</table></p>";
+					$elDivShow.html(str);
+					$elDivShow.hide().fadeIn(900);
+			}
+
+			function fnUpdateMoviePrep(thisObj) {
+				//console.log(thisObj);
+				var $tempName = thisObj.find("td:eq(0)").text(), 
+					$tempCode = thisObj.find("td:eq(1)").text(), 
+					$tempYear = thisObj.find("td:eq(2)").text(),
+					$elDivEdit = $("#divEdit");
+					console.log("abc..." + $tempName, $tempCode, $tempYear);
+
+					var str = "";
+					str += "<input type='text' placeholder='Add' disabled hidden id='fieldUpdateCode' />" +
+							"<input type='text' placeholder='Movie Name' id='fieldUpdateName' />" +
+							"<input type='number' placeholder='1981' id='fieldUpdateYear' />" +
+							"<button id='btnUpdate'>UPDATE</button>";
+
+					$elDivEdit.html(str);
+					$('#h1Update').html('updating movie code ' + $tempCode);
+
+					$('#fieldUpdateCode').val($tempCode);
+					$('#fieldUpdateName').val($tempName);
+					$('#fieldUpdateYear').val($tempYear);
+
+
+
+				$("#popMovieUpdate").popup();
+				$("#popMovieUpdate").popup("open", {"positionTo" : "window", "transition" : "flip"});
+
+			}
+
+			function fnUpdateMovie() {
+				var $updateCode = $('#fieldUpdateCode').val(),
+					$updateName = $('#fieldUpdateName').val(),
+					$updateYear = $('#fieldUpdateYear').val();
+					console.log($updateCode, $updateName, $updateYear);
+
+					db.get($updateCode, function(err, success){
+						if (err) {
+							console.log(err);
+							alert("something went wrong!!!!!");
+						} else {
+							db.put({
+								"_id" : success._id,
+								"mName" : $updateName,
+								"mYear" : $updateYear,
+								"_rev" : success._rev
+							}, function(err, success){
+								if (err) {
+									console.log(err);
+									alert("something went wrong");
+								} else {
+									$("#popMovieUpdate").popup("close");
+									fnShowMovies();
+								}
+							});
+						}
+					});
+			}
+
+			$elBtnReset.on("click", fnClearForm);
+			$elBtnShow.on("click", fnShowMovies);
+			$elBtnSave.on("click", fnSaveMovie);
+
+
+			$('#divShow').on("click", ".btnPencil", function(){fnUpdateMoviePrep($(this).parent())});
+			$('#divEdit').on("click", "#btnUpdate", fnUpdateMovie);
+
+		});
+	</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
