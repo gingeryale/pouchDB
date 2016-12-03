@@ -164,18 +164,19 @@
 					}
 				})
 			}
+
 			function fnShowMovies(){
 				db.allDocs({"include_docs" : true,"ascending" : true}, function(error, success){
 					if(success){
 						//console.log(success.rows);
-						funShowMoviesTable(success.rows);
+						fnShowMoviesTable(success.rows);
 					} else {
 						console.log(error)
 					}
 				});
 			}
 
-				function funShowMoviesTable(data){
+				function fnShowMoviesTable(data){
 					var str="<p><table id='tableMovies'>" + 
 						"<tr><th>Code</th><th>Name</th><th>Year</th><th class='thEmpty'>&nbsp;</th></tr>";
 						for(var i = 0; i< data.length; i++){
@@ -191,14 +192,14 @@
 
 			function fnUpdateMoviePrep(thisObj) {
 				//console.log(thisObj);
-				var $tempName = thisObj.find("td:eq(0)").text(), 
-					$tempCode = thisObj.find("td:eq(1)").text(), 
+				var $tempCode = thisObj.find("td:eq(0)").text(), 
+					$tempName = thisObj.find("td:eq(1)").text(), 
 					$tempYear = thisObj.find("td:eq(2)").text(),
 					$elDivEdit = $("#divEdit");
 					console.log("abc..." + $tempName, $tempCode, $tempYear);
 
 					var str = "";
-					str += "<input type='text' placeholder='Add' disabled hidden id='fieldUpdateCode' />" +
+					str += "<input type='text' placeholder='Add' id='fieldUpdateCode' />" +
 							"<input type='text' placeholder='Movie Name' id='fieldUpdateName' />" +
 							"<input type='number' placeholder='1981' id='fieldUpdateYear' />" +
 							"<button id='btnUpdate'>UPDATE</button>";
