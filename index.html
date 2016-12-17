@@ -91,7 +91,7 @@
 	</header>
 	<article role="main" class="ui-content">
 		<p>informative data</p>
-		<a href="#" class="ui-btn ui-corner-all ui-btn-b ui-shadow" id="btnNuke">Delete All</a>
+		<a href="#" class="ui-btn ui-corner-all ui-btn-b ui-shadow" id="btnNuke">Drop Entire Database Table</a>
 	</article>
 </section>
 
@@ -148,6 +148,7 @@
 					if(success){
 						fnClearForm();
 						console.log(success);
+						fnShowMovies();
 						$("#popSaved").popup();
 						$("#popSaved").popup("open");
 					} else {
@@ -186,6 +187,7 @@
 								   "</td><td class='btnPencil'>&#x270e;</td></tr>"
 						}
 						str += "</table></p>";
+						str+="<p class='ui-body ui-body-b'><input type='text' placeholder='aod' size='10' id='fieldDelete'><button id='btnDelete'>Delete Movie</button></p>"
 					$elDivShow.html(str);
 					$elDivShow.hide().fadeIn(900);
 			}
@@ -199,7 +201,7 @@
 					console.log("abc..." + $tempName, $tempCode, $tempYear);
 
 					var str = "";
-					str += "<input type='text' placeholder='Add' id='fieldUpdateCode' />" +
+					str += "<input type='text' disabled hidden placeholder='Add' id='fieldUpdateCode' />" +
 							"<input type='text' placeholder='Movie Name' id='fieldUpdateName' />" +
 							"<input type='number' placeholder='1981' id='fieldUpdateYear' />" +
 							"<button id='btnUpdate'>UPDATE</button>";
@@ -247,6 +249,51 @@
 					});
 			}
 
+			function fnDeleteMovie() {
+				var $valTheCode = $("#fieldDelete").val();
+				$valTheCode = $valTheCode.toUpperCase();
+
+				db.get($valTheCode, function(error, success){
+					if(success){
+						db.remove(success, function(error, success){
+							if (success) {
+								fnShowMovies();
+								$("#popDeleted").popup();
+								$("#popDeleted").popup("open");
+							} else {
+							console.log(error);
+							$("#popErrorNull").popup();
+							$("#popErrorNull").popup("open");	
+							}
+						});
+					} else {
+						console.log(error);
+						$("#popErrorNull").popup();
+						$("#popErrorNull").popup("open");
+					}
+				})
+			}
+
+			function fnNuke() {
+				switch(confirm("Confirm table drop \n yes?")) {
+					case true:
+						db.destroy(function(error, success){
+							if(success){
+								initDB();
+								$elDivShow.show().fadeOut(2000);
+							}else {
+								console.log(error);
+								alert("ERROR with deleting db")
+							}
+						});
+					case false:
+						console.log("second thoughts");
+					default:
+						console.log("what's the htird option?");
+						break
+				}
+			}
+
 			$elBtnReset.on("click", fnClearForm);
 			$elBtnShow.on("click", fnShowMovies);
 			$elBtnSave.on("click", fnSaveMovie);
@@ -254,6 +301,8 @@
 
 			$('#divShow').on("click", ".btnPencil", function(){fnUpdateMoviePrep($(this).parent())});
 			$('#divEdit').on("click", "#btnUpdate", fnUpdateMovie);
+			$('#divShow').on("click", "#btnDelete", fnDeleteMovie);
+			$('#btnNuke').on("click", fnNuke);
 
 		});
 	</script>
